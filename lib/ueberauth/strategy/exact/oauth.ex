@@ -13,16 +13,17 @@ defmodule Ueberauth.Strategy.Exact.OAuth do
 
   @defaults [
     strategy: __MODULE__,
-    site: "https://start.exactonline.nl",
+    site: "https://start.exactonline.nl/api/v1",
     authorize_url: "https://start.exactonline.nl/api/oauth2/auth",
-    token_url: "https://start.exactonline.nl/api/oauth2/token"
+    token_url: "https://start.exactonline.nl/api/oauth2/token",
+    token_method: :post
   ]
 
   @doc """
   Construct a client for requests to Exact.
   Optionally include any OAuth2 options here to be merged with the defaults:
       Ueberauth.Strategy.Exact.OAuth.client(
-        redirect_uri: "http://localhost:4000/auth/github/callback"
+        redirect_uri: "http://localhost:4000/auth/exact/callback"
       )
   This will be setup automatically for you in `Ueberauth.Strategy.Exact`.
   These options are only useful for usage outside the normal callback phase of
@@ -71,17 +72,48 @@ defmodule Ueberauth.Strategy.Exact.OAuth do
     client.token
   end
 
+  def refresh_auth_token!(params \\ [], options \\ []) do
+    headers = Keyword.get(options, :headers, [])
+    options = Keyword.get(options, :options, [])
+    client_options = Keyword.get(options, :client_options, [])
+
+    client = client(client_options)
+
+    request =
+      client
+      |> put_param("client_secret", client.client_secret)
+      # |> put_header("Accept", "application/json")
+      |> Exact.AuthCode.refresh_auth_token(params, headers)
+
+    case OAuth2.Client.post(
+           request,
+           client.token_url,
+           request.params,
+           request.headers
+         ) do
+      {:ok, response} -> {:ok, OAuth2.AccessToken.new(response.body)}
+      {:error, error} -> {:error, error}
+    end
+  end
+
   # Strategy Callbacks
 
   def authorize_url(client, params) do
-    OAuth2.Strategy.AuthCode.authorize_url(client, params)
+    Exact.AuthCode.authorize_url(client, params)
   end
 
   def get_token(client, params, headers) do
     client
     |> put_param("client_secret", client.client_secret)
     |> put_header("Accept", "application/json")
-    |> OAuth2.Strategy.AuthCode.get_token(params, headers)
+    |> Exact.AuthCode.get_token(params, headers)
+  end
+
+  def refresh_auth_token(client, params, headers) do
+    client
+    |> put_param("client_secret", client.client_secret)
+    |> put_header("Accept", "application/json")
+    |> Exact.AuthCode.refresh_auth_token(params, headers)
   end
 
   defp check_credential(config, key) do
