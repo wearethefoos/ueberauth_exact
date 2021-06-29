@@ -1,18 +1,5 @@
 defmodule UeberauthExact do
   @moduledoc """
-  Documentation for `UeberauthExact`.
+  Exact Online auth strategy for `Ueberauth`.
   """
-
-  @doc """
-  Hello world.
-
-  ## Examples
-
-      iex> UeberauthExact.hello()
-      :world
-
-  """
-  def hello do
-    :world
-  end
 end
