@@ -9,7 +9,7 @@ The package can be installed by adding `ueberauth_exact` to your list of depende
 ```elixir
 def deps do
   [
-    {:ueberauth_exact, "~> 0.1.0"}
+    {:ueberauth_exact, "~> 0.1.1"}
   ]
 end
 ```
