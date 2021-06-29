@@ -1,20 +1,29 @@
 defmodule Ueberauth.Strategy.Exact do
   @moduledoc """
   Provides an Ueberauth strategy for authenticating with Exact Online.
+
   ### Setup
+
   Create an application in Exact for you to use.
   Register a new application at: [Exact App Center](https://apps.exactonline.com)
   and get the `client_id` and `client_secret`.
-  Include the provider in your configuration for Ueberauth;
+
+  Include the provider in your configuration for Ueberauth:
+
       config :ueberauth, Ueberauth,
         providers: [
           exact: { Ueberauth.Strategy.Exact, [] }
         ]
+
   Then include the configuration for Exact Online:
+
       config :ueberauth, Ueberauth.Strategy.Exact.OAuth,
         client_id: System.get_env("EXACT_CLIENT_ID"),
-        client_secret: System.get_env("EXACT_CLIENT_SECRET")
+        client_secret: System.get_env("EXACT_CLIENT_SECRET"),
+        redirect_uri: "https://gqgh.localtunnel.me/auth/exact/callback" # <-- note that Exact needs HTTPS for a callback URL scheme, even in test apps.
+
   If you haven't already, create a pipeline and setup routes for your callback handler
+
       pipeline :auth do
         Ueberauth.plug "/auth"
       end
@@ -22,8 +31,10 @@ defmodule Ueberauth.Strategy.Exact do
         pipe_through [:browser, :auth]
         get "/:provider/callback", AuthController, :callback
       end
+
   Create an endpoint for the callback where you will handle the
   `Ueberauth.Auth` struct:
+
       defmodule MyApp.AuthController do
         use MyApp.Web, :controller
         def callback_phase(%{ assigns: %{ ueberauth_failure: fails } } = conn, _params) do
@@ -33,14 +44,24 @@ defmodule Ueberauth.Strategy.Exact do
           # do things with the auth
         end
       end
+
   You can edit the behaviour of the Strategy by including some options when you
   register your provider.
+
   To set the `uid_field`:
+
       config :ueberauth, Ueberauth,
         providers: [
-          exact: { Ueberauth.Strategy.Exact, [uid_field: :Email] }
+          exact: { Ueberauth.Strategy.Exact, [uid_field: :Email] } # Default is `:UserID`, a string UUID."
         ]
-  Default is `:UserID`."
+
+  ## Usage
+
+  Once you obtained a token, you may use the OAuth client directly:
+
+      Ueberauth.Strategy.Exact.OAuth.get("/current/Me")
+
+  See the [Exact Online API Docs](https://start.exactonline.nl/docs/HlpRestAPIResources.aspx) for more information. Note that the provided client knows about the `/api/v1` prefix already.
   """
   use Ueberauth.Strategy,
     uid_field: :UserID,

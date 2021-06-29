@@ -5,7 +5,8 @@ defmodule Ueberauth.Strategy.Exact.OAuth do
   configuration:
       config :ueberauth, Ueberauth.Strategy.Exact.OAuth,
         client_id: System.get_env("EXACT_CLIENT_ID"),
-        client_secret: System.get_env("EXACT_CLIENT_SECRET")
+        client_secret: System.get_env("EXACT_CLIENT_SECRET"),
+        redirect_uri: "https://example.com/auth/exact/callback"
   """
   use OAuth2.Strategy
 
